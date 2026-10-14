@@ -3138,6 +3138,13 @@ void ProgramD3D::initAttribLocationsToD3DSemantic(const gl::Context *context)
     int semanticIndex = 0;
     for (const sh::ShaderVariable &attribute : vertexShader->getActiveAttributes(context))
     {
+        // DynamicHLSL uses system-value semantics for built-ins, not TEXCOORD.
+        // Keep this mapping in step with its vertex input signature.
+        if (attribute.isBuiltIn())
+        {
+            continue;
+        }
+
         int regCount    = gl::VariableRegisterCount(attribute.type);
         GLuint location = mState.getAttributeLocation(attribute.name);
         ASSERT(location != std::numeric_limits<GLuint>::max());

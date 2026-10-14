@@ -204,8 +204,6 @@ void SortAttributesByLayout(const ProgramD3D &programD3D,
             sortedAttributesOut->resize(d3dSemantic + 1);
         }
 
-        (*sortedD3DSemanticsOut)[d3dSemantic] = d3dSemantic;
-
         const auto *arrayAttrib = &vertexArrayAttribs[locationIndex];
         if (arrayAttrib->attribute && arrayAttrib->attribute->enabled)
         {
@@ -217,6 +215,21 @@ void SortAttributesByLayout(const ProgramD3D &programD3D,
             (*sortedAttributesOut)[d3dSemantic] = &currentValueAttribs[locationIndex];
         }
     }
+
+    // A linked program can omit a vertex-shader attribute while retaining a
+    // later D3D semantic. Keep that semantic for the shader signature, but do
+    // not pass the empty vector slot to the input-layout builder.
+    size_t count = 0;
+    for (size_t semantic = 0; semantic < sortedAttributesOut->size(); ++semantic)
+    {
+        const auto *attribute = (*sortedAttributesOut)[semantic];
+        if (attribute)
+        {
+            (*sortedD3DSemanticsOut)[count] = static_cast<int>(semantic);
+            (*sortedAttributesOut)[count++] = attribute;
+        }
+    }
+    sortedAttributesOut->resize(count);
 }
 
 void UpdateUniformBuffer(ID3D11DeviceContext *deviceContext,
